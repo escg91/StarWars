@@ -12,7 +12,7 @@ const getState = ({
             detailPersonaje: {},
             detailPlaneta: {},
             detailVehiculo: {},
-
+            usuariologueado: false
 
         },
         actions: {
@@ -21,7 +21,7 @@ const getState = ({
                 getActions().changeColor(0, "green");
             },
 
-            getDetailCharacter: (id) => {
+            getDetailPersonaje: (id) => {
                 fetch("https://www.swapi.tech/api/people/" + id)
                     .then((response) => response.json())
                     .then((data) => setStore({
@@ -76,22 +76,22 @@ const getState = ({
                     }));
             },
 
-            addFavorites: (item) =>{
+            addFavorites: (item) => {
                 const store = getStore();
                 if (store.favoritos.includes(item)) {
                     getActions().deleteFavorites(item)
-            }else{
+                } else {
+                    setStore({
+                        favoritos: [...store.favoritos, item]
+                    })
+                }
+            },
+            deleteFavorites: (itemFavorite) => {
+                const store = getStore();
                 setStore({
-                    favoritos:[...store.favoritos,item]
+                    favoritos: store.favoritos.filter((item) => item !== itemFavorite)
                 })
-            }
-        },
-        deleteFavorites: (itemFavorite) => {
-            const store = getStore();
-            setStore({
-                favoritos: store.favoritos.filter((item)=>item!==itemFavorite)
-            })
-        },
+            },
             changeColor: (index, color) => {
                 //get the store
                 const store = getStore();
@@ -107,9 +107,77 @@ const getState = ({
                 setStore({
                     demo: demo
                 });
+            },
+            login: (email, contraseña) => {
+                try {
+                    fetch('https://3000-escg91-starwarsapilogin-ue4y2fjirpi.ws-us85.gitpod.io/login', {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({
+                            "email": email,
+                            "contraseña": contraseña
+
+                        })
+                    }).then((response) => {
+                        if (response.status === 200) {
+                            setStore({
+                                usuariologueado: true,
+
+                            })
+                        }
+                        return response.json()
+                    }).then((data) => {
+                        localStorage.setItem("token", data.access_token)
+                        if (data.msg === "Bad username or password" || data.msg === "User does not exist") {
+                            alert(data.msg)
+                        }
+                        console.log(data);
+                    });
+                } catch (e) {
+                    console.log(e);
+                }
+            },
+            registro: (email, contraseña, nombre, apellido) => {
+                try {
+                    fetch('https://3000-escg91-starwarsapilogin-ue4y2fjirpi.ws-us85.gitpod.io/registro', {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({
+                            "nombre": nombre,
+                            "apellido": apellido,
+                            "email": email,
+                            "contraseña": contraseña
+                        })
+                    }).then((response) => {
+                        if (response.status === 200) {
+                            alert("Usuario creado con exito!")
+                        }
+                        return response.json()
+                    }).then((data) => {
+                        if (data.msg === "User exist in the system") {
+                            alert(data.msg)
+                        }
+                        console.log(data);
+                    });
+                    //
+                } catch (e) {
+                    console.log(e);
+                }
             }
+        },
+        cerrarsesion: () => {
+            localStorage.removeItem('token');
+            setStore({
+                usuariologueado: false,
+
+            })
         }
-    };
+    }
 };
+
 
 export default getState;
